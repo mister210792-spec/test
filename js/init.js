@@ -1,5 +1,4 @@
 // js/init.js
-// Этот файл должен загружаться самым первым
 
 // Глобальные переменные
 let currentUser = null;
@@ -10,26 +9,30 @@ let auth = null;
 // Функция инициализации Firebase
 function initializeFirebase() {
     if (typeof firebase !== 'undefined') {
-        auth = firebase.auth();
-        db = firebase.firestore();
-        console.log("✅ Firebase сервисы готовы");
-        
-        // Настраиваем персистентность
-        firebase.firestore().enablePersistence()
-            .catch((err) => {
-                console.log("⚠️ Режим оффлайн не доступен:", err);
-            });
+        try {
+            // СОХРАНЯЕМ В ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
+            window.auth = firebase.auth();
+            window.db = firebase.firestore();
             
-        return true;
+            // ТАКЖЕ СОХРАНЯЕМ В ЛОКАЛЬНЫЕ ДЛЯ ЭТОГО ФАЙЛА
+            auth = window.auth;
+            db = window.db;
+            
+            console.log("✅ Firebase сервисы готовы");
+            console.log("🔑 auth доступен:", auth !== null);
+            
+            return true;
+        } catch (error) {
+            console.error("❌ Ошибка инициализации Firebase:", error);
+            return false;
+        }
     } else {
         console.error("❌ Firebase не загружен");
         return false;
     }
 }
 
-// Экспортируем в глобальную область
+// Экспортируем
 window.currentUser = currentUser;
 window.selectedRegPlan = selectedRegPlan;
-window.db = db;
-window.auth = auth;
 window.initializeFirebase = initializeFirebase;
