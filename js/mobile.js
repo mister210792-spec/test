@@ -565,6 +565,84 @@ function handleElementTouchMove(e) {
     
     draw();
 }
+// Добавьте эти функции в конец mobile.js
+
+function handlePointTouchStart(pointId, e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    cancelLongPress();
+    
+    const touch = e.touches[0];
+    const rect = svg.getBoundingClientRect();
+    const point = rooms[activeRoom].points.find(p => p.id === pointId);
+    
+    if (!point) return;
+    
+    touchState.dragPoint = point;
+    touchState.startX = touch.clientX - rect.left;
+    touchState.startY = touch.clientY - rect.top;
+    touchState.startPointX = point.x;
+    touchState.startPointY = point.y;
+    touchState.moved = false;
+    
+    selectedPointId = pointId;
+    
+    longPressTimer = setTimeout(() => {
+        if (mobileTool === 'delete') {
+            const r = rooms[activeRoom];
+            const index = r.points.findIndex(p => p.id === pointId);
+            if (index !== -1) {
+                saveState();
+                r.points.splice(index, 1);
+                if (r.points.length < 3) r.closed = false;
+                draw();
+            }
+        }
+        longPressTimer = null;
+    }, 500);
+}
+
+function handlePointTouchEnd(pointId, e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    cancelLongPress();
+    touchState.dragPoint = null;
+    selectedPointId = null;
+}
+
+function handlePointTouchMove(e) {
+    if (!touchState.dragPoint) return;
+    
+    e.preventDefault();
+    
+    const touch = e.touches[0];
+    const rect = svg.getBoundingClientRect();
+    const currentX = touch.clientX - rect.left;
+    const currentY = touch.clientY - rect.top;
+    
+    const deltaX = currentX - touchState.startX;
+    const deltaY = currentY - touchState.startY;
+    
+    if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
+        cancelLongPress();
+        touchState.moved = true;
+    }
+    
+    const deltaMmX = deltaX / (MM_TO_PX * scale);
+    const deltaMmY = deltaY / (MM_TO_PX * scale);
+    
+    touchState.dragPoint.x = snap(touchState.startPointX + deltaMmX);
+    touchState.dragPoint.y = snap(touchState.startPointY + deltaMmY);
+    
+    draw();
+}
+
+// Экспортируем новые функции
+window.handlePointTouchStart = handlePointTouchStart;
+window.handlePointTouchEnd = handlePointTouchEnd;
+window.handlePointTouchMove = handlePointTouchMove;
 
 // Экспорт
 window.isMobile = isMobile;
@@ -583,4 +661,5 @@ window.closeResizeModal = closeResizeModal;
 window.applyResize = applyResize;
 window.handleElementTouchStart = handleElementTouchStart;
 window.handleElementTouchEnd = handleElementTouchEnd;
+
 window.handleElementTouchMove = handleElementTouchMove;
