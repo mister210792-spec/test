@@ -994,8 +994,12 @@ function completeAuth() {
 
     updatePlanDisplay();
     
+    // ВАЖНО: показываем админ-панель если пользователь админ
     if (typeof updateAdminPanelVisibility === 'function') {
+        console.log("👑 Вызов updateAdminPanelVisibility из completeAuth");
         updateAdminPanelVisibility();
+    } else {
+        console.warn("⚠️ updateAdminPanelVisibility не найдена в completeAuth");
     }
 
     setScaleFor5x5();
@@ -1044,3 +1048,4 @@ window.centerView = centerView;
 window.generateFullEstimate = generateFullEstimate;
 window.completeAuth = completeAuth;
 window.resizeWall = resizeWall;
+
