@@ -404,37 +404,60 @@
   document.addEventListener('DOMContentLoaded', function() {
     console.log("🔄 DOM загружен, инициализация...");
     
-    // Инициализируем Firebase сервисы
     const firebaseReady = initializeFirebase();
     
-    if (firebaseReady) {
+    if (firebaseReady && window.auth) {
       console.log("✅ Firebase сервисы инициализированы");
       
-      // Настраиваем слушатель аутентификации
       window.auth.onAuthStateChanged((user) => {
         if (user) {
-          window.currentUser = {
+          console.log("👤 Пользователь найден:", user.email);
+          
+          // Создаем базовый объект пользователя
+          const userData = {
             name: user.displayName || user.email.split('@')[0],
             email: user.email,
             uid: user.uid,
             plan: 'free'
           };
           
-          // Загружаем план пользователя
+          // Обновляем currentUser
+          updateCurrentUser(userData);
+          
           if (window.db) {
             window.db.collection('users').doc(user.uid).get()
               .then((doc) => {
                 if (doc.exists) {
-                  window.currentUser.plan = doc.data().plan || 'free';
+                  // Обновляем план из Firestore
+                  userData.plan = doc.data().plan || 'free';
+                  userData.subscription = doc.data().subscription;
+                  
+                  // Снова обновляем currentUser с планом
+                  updateCurrentUser(userData);
+                  
+                  console.log("📊 План загружен:", userData.plan);
                 }
-                // Продолжаем загрузку
+                
+                // Проверяем, является ли пользователь админом
+                checkAdminAndShowPanel();
+                
                 if (typeof completeAuth === 'function') {
                   completeAuth();
                 }
               })
-              .catch(console.error);
+              .catch((error) => {
+                console.error("❌ Ошибка загрузки плана:", error);
+                if (typeof completeAuth === 'function') {
+                  completeAuth();
+                }
+              });
+          } else {
+            if (typeof completeAuth === 'function') {
+              completeAuth();
+            }
           }
         } else {
+          console.log("👤 Пользователь не авторизован");
           document.getElementById('auth-overlay').style.display = 'flex';
         }
       });
@@ -443,6 +466,19 @@
       alert("Ошибка подключения к серверу. Проверьте интернет и обновите страницу.");
     }
   });
+  
+  // Функция для проверки админа и показа панели
+  function checkAdminAndShowPanel() {
+    // Небольшая задержка, чтобы completeAuth успела выполниться
+    setTimeout(() => {
+      if (typeof updateAdminPanelVisibility === 'function') {
+        updateAdminPanelVisibility();
+        console.log("👑 Проверка админ-панели...");
+      } else {
+        console.warn("⚠️ updateAdminPanelVisibility не найдена");
+      }
+    }, 500);
+  }
 </script>
 <div id="projectsModal" class="modal-overlay" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(44, 62, 80, 0.6); z-index: 3000; backdrop-filter: blur(4px); align-items: center; justify-content: center;">
     <div class="modal-content" style="background: white; padding: 30px; border-radius: 16px; width: 450px; max-width: 90%; box-shadow: 0 20px 40px rgba(0,0,0,0.2); position: relative;">
@@ -547,4 +583,5 @@
     window.addEventListener('resize', function() {
         updateMobileButtonsVisibility();
     });
+
 </script></html>
