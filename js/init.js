@@ -31,8 +31,19 @@ function initializeFirebase() {
         return false;
     }
 }
+// Функция для обновления currentUser в глобальной области
+function updateCurrentUser(userData) {
+    window.currentUser = userData;
+    // Также обновляем локальную переменную для этого файла
+    currentUser = userData;
+    console.log("👤 currentUser обновлен:", currentUser.email, "план:", currentUser.plan);
+}
+
+// Экспортируем
+window.updateCurrentUser = updateCurrentUser;
 
 // Экспортируем
 window.currentUser = currentUser;
 window.selectedRegPlan = selectedRegPlan;
 window.initializeFirebase = initializeFirebase;
+
