@@ -5,13 +5,35 @@ const ADMIN_EMAILS = [
 ];
 
 function isAdmin() {
-    return currentUser && ADMIN_EMAILS.includes(currentUser.email);
+    // Проверяем через window.currentUser
+    const user = window.currentUser;
+    
+    if (!user || !user.email) {
+        console.log("👑 Админ-проверка: пользователь не найден");
+        return false;
+    }
+    
+    const isAdminUser = ADMIN_EMAILS.includes(user.email);
+    console.log(`👑 Админ-проверка для ${user.email}: ${isAdminUser ? 'ДА' : 'НЕТ'}`);
+    
+    return isAdminUser;
 }
 
 function updateAdminPanelVisibility() {
     const adminSection = document.getElementById('admin-section');
-    if (adminSection) {
-        adminSection.style.display = isAdmin() ? 'block' : 'none';
+    if (!adminSection) {
+        console.warn("⚠️ Элемент admin-section не найден");
+        return;
+    }
+    
+    const admin = isAdmin();
+    console.log("👑 Обновление видимости админ-панели:", admin ? "ПОКАЗАТЬ" : "СКРЫТЬ");
+    
+    adminSection.style.display = admin ? 'block' : 'none';
+    
+    // Если админ, добавим визуальное подтверждение
+    if (admin) {
+        console.log("✅ Админ-панель активирована для", window.currentUser?.email);
     }
 }
 
@@ -217,4 +239,5 @@ window.updateAdminPanelVisibility = updateAdminPanelVisibility;
 window.adminFindUser = adminFindUser;
 window.adminUpdateUserPlan = adminUpdateUserPlan;
 window.adminMakeMePro = adminMakeMePro;
+
 window.closeAdminUserInfo = closeAdminUserInfo;
